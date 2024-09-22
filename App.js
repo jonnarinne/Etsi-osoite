@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const App = () => {
   const [address, setAddress] = useState('');
-  const [region, setRegion] = useState({
-    latitude: 60.1699, // Helsingin koordinaatit
-    longitude: 24.9384,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  });
+  const [region, setRegion] = useState(null);
   const [markerCoords, setMarkerCoords] = useState(null); // Marker-komponentin koordinaatit
+
+  // Haetaan nykyinen sijainti, kun sovellus avataan
+  useEffect(() => {
+    const getLocation = async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Sijaintioikeus tarvitaan');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+      setRegion({
+        latitude,
+        longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+      setMarkerCoords({
+        latitude,
+        longitude,
+      });
+    };
+
+    getLocation();
+  }, []);
+
 
   // Haetaan osoite, annetaan virheilmoitus jos käyttäjä ei syötä mitään
   const fetchCoordinates = async () => {
